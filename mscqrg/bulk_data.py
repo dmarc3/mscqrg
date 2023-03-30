@@ -45,13 +45,15 @@ class BULK_DATA:
         """
         logic = (self.short_description and self.long_description and self.format and self.fields)
         if logic:
-            out = '\n\n'.join([
-                '__**[`'+self.name+'`]('+self.url+')**__'+':  '+self.short_description,
-                self.long_description,
-                'Format:',
-                '```text\n'+self._str_format()+'\n```',
-                # '```text\n'+self._str_fields()+'\n```',
-            ])
+            line_break = ['-'*100]
+            header = ['__**[`'+self.name+'`]('+self.url+')**__'+':  '+self.short_description]
+            description = [self.long_description]
+            format = self._str_format()
+            fields = self._str_fields()
+            out = '\n\n'.join(header + line_break +
+                              description + line_break +
+                              format + line_break +
+                              fields)
             return out
         else:
             return ''
@@ -111,13 +113,24 @@ class BULK_DATA:
                 pages.append(text['blocks'][1:-3])
             # Get raw text data
             text = []
+            found_card = True
             for sections in pages:
                 for section in sections:
                     tmp = []
-                    for line in section['lines']:
-                        for span in line['spans']:
-                            tmp.append(span['text'])
-                    text.append(tmp)
+                    if 'lines' in section:
+                        for line in section['lines']:
+                            for span in line['spans']:
+                                if span['text'] == self.name:
+                                    found_card = not found_card
+                                if found_card:
+                                    if len(span['text']) > 8:
+                                        for item in span['text'].split():
+                                            tmp.append(item)
+                                    else:
+                                        tmp.append(span['text'])
+                                else:
+                                    tmp.append(span['text'])
+                        text.append(tmp)
         return text
 
     def _find_indeces(self, text: list) -> list:
@@ -151,12 +164,26 @@ class BULK_DATA:
             str: Bulk Data Entry Format table
         """
         if self.format:
-            return tabulate(
-                self.format,
-                headers='firstrow',
-                tablefmt='markdown',
-                # tablefmt='fancy_grid',
-            )
+            str_format = []
+            count = 0
+            for row in self.format:
+                if len(row) == 1:
+                    count += 1
+                    str_format.extend(row)
+            str_format.append('```text\n\nFormat:\n' + 
+                               tabulate(
+                                   self.format[count:],
+                                   headers='firstrow',
+                                   tablefmt='markdown',
+                               ) + '\n\n\n```')
+            return str_format
+            # ['Format:', '```text\n'+]
+            # return tabulate(
+            #     self.format,
+            #     headers='firstrow',
+            #     tablefmt='markdown',
+            #     # tablefmt='fancy_grid',
+            # )
         else:
             return ''
     
@@ -167,14 +194,15 @@ class BULK_DATA:
             str: Bulk Data Entry Describer/Meaning table
         """
         if self.fields:
-            return tabulate(
+            return ['```text\n\n' + tabulate(
                 self.fields,
                 headers='firstrow',
                 tablefmt='markdown',
-                maxcolwidths=self._get_max_field_cols(),
-            )
+                maxcolwidths=107,
+                # maxcolwidths=self._get_max_field_cols(),
+            ) + '\n\n\n```']
         else:
-            return ''
+            return []
     
     def _get_max_field_cols(self) -> list:
         """Determines size of string tables
@@ -205,10 +233,13 @@ class BULK_DATA:
             list: Update text from Bulk Data Entry PDF read with corrected spacing/formatting
         """
         # Make left adjust with 8 character spacing
-        for ind, row in enumerate(table):
-            table[ind] = [field.ljust(8) for field in row]
-            if ind > 1:
-                table[ind] = [''] + table[ind]
+        count = 0
+        while len(table[count]) == 1:
+            count += 1
+        for ind, row in enumerate(table[count:]):
+            table[count+ind] = [field.ljust(8) for field in row]
+            if count+ind > count+1:
+                table[count+ind] = [''] + table[count+ind]
         return table
 
     def _reformat_describer(self, table: list) -> list:
