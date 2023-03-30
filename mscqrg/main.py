@@ -1,12 +1,7 @@
 import fitz
 import os
 import sys
-import ipdb
 import tabulate
-# tabulate.PRESERVE_WHITESPACE = True
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from matplotlib.patches import Rectangle
 
 PDF_PATH = "MSC_Nastran_2022.4_Quick_Reference_Guide.pdf"
 dims = os.get_terminal_size()

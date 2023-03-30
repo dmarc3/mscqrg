@@ -3,6 +3,8 @@ import json
 
 from tabulate import tabulate
 
+from mscqrg.load_datatypes import get_cards
+
 DIR = os.path.dirname(__file__)
 PDF_PATH = os.path.join(DIR, "MSC_Nastran_2022.4_Quick_Reference_Guide.pdf")
 URL = "https://help.hexagonmi.com/bundle/MSC_Nastran_2022.4/page/Nastran_Combined_Book/qrg/"
@@ -21,18 +23,19 @@ class BULK_DATA:
             pdf (bool, optional): Flag to enforce read by PDF. If False, read from JSON if it exists. Defaults to False.
         """
         self.name = name.upper()
-        self._set_url()
         self.short_description = ''
         self.long_description = ''
         self.format = []
         self.fields = []
         self._page = 0
-        if pdf or not os.path.exists(os.path.join(DIR, 'BULK', self.name+'.json')):
-            self.load_from_pdf()
-            if not os.path.exists(os.path.join(DIR, 'BULK', self.name+'.json')):
-                self.export_json()
-        else:
-            self.load_from_json()
+        if self.name in get_cards():
+            self._set_url()
+            if pdf or not os.path.exists(os.path.join(DIR, 'BULK', self.name+'.json')):
+                self.load_from_pdf()
+                if not os.path.exists(os.path.join(DIR, 'BULK', self.name+'.json')):
+                    self.export_json()
+            else:
+                self.load_from_json()
 
     def __repr__(self) -> str:
         """String representation method
