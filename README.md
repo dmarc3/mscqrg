@@ -1,2 +1,2 @@
 # mscqrg
-MSC Nastran (Hexigon) Quick Reference Guide PDF Scrapper
+MSC Nastran (Hexagon) Quick Reference Guide PDF Scrapper
